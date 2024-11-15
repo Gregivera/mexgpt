@@ -130,24 +130,28 @@ class GptConfig(AppConfig):
                 if message.author == self.bot.user:
                     print("Ignoring message from the bot itself.")
                     return  # Ignore messages from the bot itself
-
+            
                 try:
                     # Process commands first
                     await self.bot.process_commands(message)
-
+            
                     # Only handle messages if they don't contain commands
                     if message.content.startswith(self.bot.command_prefix):
                         print("Message is a command. Ignoring for dynamic response.")
                         return  # Ignore messages that are commands
-
-                    # Handle the message based on the type of channel
+            
+                    # Only proceed if the message is from a DM or the specified channel
                     if isinstance(message.channel, discord.DMChannel):
-                        await handle_message(message, is_dm=True)
                         print("Handling DM message.")
-                    else:
-                        print("Handling channel message.")
+                        await handle_message(message, is_dm=True)
+                    elif message.channel.id == DISCORD_CHANNEL_ID:
+                        print(f"Handling message in the allowed channel with ID {DISCORD_CHANNEL_ID}.")
                         await handle_message(message, is_dm=False)
-
+                    else:
+                        # Ignore messages from other channels
+                        print(f"Ignoring message from channel with ID {message.channel.id}.")
+                        return
+            
                 except Exception as e:
                     print(f"Error in on_message: {str(e)}")
                     await message.channel.send(f"An error occurred: {str(e)}")
